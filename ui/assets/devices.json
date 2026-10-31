@@ -1,0 +1,172 @@
+{
+  "_comment": [
+    "设备图样与型号清单。数据来源：MetaHub 1.0.1.11（app/config.xml 为设备注册表真源）。",
+    "app.js 在拿到 device_info 后按顺序逐条匹配：`match` 任一关键字（不区分大小写）",
+    "出现在设备名里即命中，所以长名字必须排在短名字（p1）之前。",
+    "type: mouse=可完整配置；keyboard/gamepad=已注册型号，仅识别显示（协议未接入）。",
+    "P1 的 keys 来自 app/device/mouse_p1.xml（func_desc 经 2052.lan 翻译），当前 UI 未渲染，仅作存档。"
+  ],
+  "devices": [
+    {
+      "match": [
+        "p1 ultra 4k",
+        "mpandamouse"
+      ],
+      "image": "assets/devices/mouse-p1.png",
+      "label": "玄熊猫 P1 Ultra 4K",
+      "type": "mouse",
+      "pids": [
+        "0xf5ab",
+        "0xf5ac",
+        "0x0021",
+        "0xf533"
+      ],
+      "modes": [
+        "USB 有线",
+        "2.4G 4K 接收器",
+        "蓝牙 5.1（仅电量可读）"
+      ],
+      "bluetooth": {
+        "name": "MpandaMouse PRO",
+        "services": [
+          "0x180f"
+        ],
+        "note": "BLE 下仅标准电池服务可读"
+      }
+    },
+    {
+      "match": [
+        "p1 pro max"
+      ],
+      "image": "assets/devices/mouse-p1.png",
+      "label": "玄熊猫 P1 Pro Max",
+      "type": "mouse",
+      "pids": [
+        "0xf521",
+        "0xf5a9"
+      ],
+      "modes": [
+        "USB 有线",
+        "2.4G"
+      ]
+    },
+    {
+      "match": [
+        "pd100m"
+      ],
+      "image": "assets/devices/keyboard-pd100m.png",
+      "label": "玄派 PD100M 键盘",
+      "type": "keyboard",
+      "pids": [
+        "0x024f"
+      ],
+      "modes": [
+        "USB 有线",
+        "2.4G"
+      ]
+    },
+    {
+      "match": [
+        "pd75m"
+      ],
+      "image": "assets/devices/keyboard-pd75m.png",
+      "label": "玄派 PD75M 键盘",
+      "type": "keyboard",
+      "pids": [
+        "0x024f"
+      ],
+      "modes": [
+        "USB 有线",
+        "2.4G"
+      ]
+    },
+    {
+      "match": [
+        "pd98"
+      ],
+      "image": "assets/devices/keyboard-pd98.png",
+      "label": "玄派 PD98 键盘",
+      "type": "keyboard",
+      "pids": [
+        "0x024f"
+      ],
+      "modes": [
+        "USB 有线"
+      ]
+    },
+    {
+      "match": [
+        "gamepad",
+        "g1"
+      ],
+      "image": "assets/devices/gamepad-g1.png",
+      "label": "玄派 Gamepad G1",
+      "type": "gamepad",
+      "pids": [
+        "0x0022"
+      ],
+      "modes": [
+        "USB 有线"
+      ]
+    },
+    {
+      "match": [
+        "p1",
+        "玄熊猫",
+        "metaphyuni",
+        "metapanda"
+      ],
+      "image": "assets/devices/mouse-p1.png",
+      "label": "玄熊猫 P1",
+      "type": "mouse",
+      "pids": [
+        "0xf5a3",
+        "0xf5a2"
+      ],
+      "modes": [
+        "USB 有线",
+        "2.4G"
+      ],
+      "keys": [
+        {
+          "id": 201,
+          "slot": 0,
+          "func": "鼠标左键"
+        },
+        {
+          "id": 202,
+          "slot": 1,
+          "func": "鼠标右键"
+        },
+        {
+          "id": 203,
+          "slot": 2,
+          "func": "鼠标中键"
+        },
+        {
+          "id": 204,
+          "slot": 4,
+          "func": "鼠标前进"
+        },
+        {
+          "id": 205,
+          "slot": 3,
+          "func": "鼠标后退"
+        },
+        {
+          "id": 206,
+          "slot": 5,
+          "func": "鼠标中键（滚轮下压第二方向）"
+        }
+      ]
+    },
+    {
+      "match": [
+        "m1"
+      ],
+      "image": "assets/devices/mouse-m1.png",
+      "label": "玄派 M1",
+      "type": "mouse"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+# Build output
+/src-tauri/target/
+/out/
+/src-tauri/gen/
+
+# Binaries and backups that must never reach the repository
+*.exe
+*.dll
+*.pdb
+*.bak
+
+# …but the loader that vendor/webview2-com-sys embeds into the exe is part of
+# the source: it is pulled in with include_bytes!, so without it nothing builds.
+!vendor/webview2-com-sys/x64/WebView2Loader.dll
+!vendor/webview2-com-sys/x86/WebView2Loader.dll
+
+# Scratch copies and one-off scripts used while reverse-engineering.
+# The protocol work they produced lives in src-tauri/src/protocol.rs.
+/.stage/
+/tools/
+/add_bench.py
+/add_connection.py
+/add_flush.py
+/add_rawcmd.py
+/add_responsive.py
+/fix_battery.py
+/extract_asar.py
+
+# Editor / OS noise
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+desktop.ini

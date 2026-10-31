@@ -1,0 +1,863 @@
+/* Metaphyuni玄熊猫P1管理器 — default shell styled after the real ATK HUB renderer.
+ *
+ * Every value below is transcribed from the unpacked ATK HUB bundle
+ * (bootstrap-*.css `:root` block and Constant-*.css velota components),
+ * not eyeballed:
+ *   -- bg ladder   --bg-100 #0a0a0c … --bg-500 #1a1b20, default #0f0f11
+ *   -- greys       --greys-100 #eef0f1 … --greys-900 #202427
+ *   -- overlays    white at 3–15 % (velota-card fill is hsla(0,0%,85%,.03))
+ *   -- accent      brand-primary-2 #ff6900; alert red #d84f68; teal #4dbe95
+ *   -- font        "OppoSans4","HarmonyOS_Sans_SC_Medium"; numerals in DIN
+ *   -- cards       border-radius 1.5rem, 1 px gradient hairline via mask,
+ *                  shadow `0 .375rem 5rem #000`
+ *
+ * Theme modes: the dark values below ARE the velota palette and stay the
+ * reference. The light block is a translation, not an inversion — same accent,
+ * same radii, overlays flipped from "white on black" to "ink on white".
+ * `color-scheme` follows the theme so native controls (select dropdowns,
+ * scrollbars) match without extra work.
+ */
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #0f0f11;
+  --bg-soft: #101116;
+  --surface: #16181c;
+  --surface-2: #1a1b20;
+  --line: #373e44;
+  --line-soft: #202427;
+  --text: #eef0f1;
+  --text-dim: #b6bec4;
+  --text-faint: #7d8b96;
+  --accent: #ff6900;
+  --accent-2: #ff8a3d;
+  --warn: #f6c86a;
+  --danger: #d84f68;
+  --ok: #4dbe95;
+  --radius: 1.5rem;
+  --shadow: 0 .375rem 5rem rgba(0, 0, 0, .55);
+
+  /* Named surfaces. A skin only has to override this list. */
+  --rail-bg: linear-gradient(180deg, #131419 0%, #0a0a0c 100%);
+  --heading: #eef0f1;
+  --label: #d0d0d0;
+  --on-accent: #fff;
+  --track: #373e44;
+  --input-bg: #101116;
+  --btn-hover-bg: hsla(0, 0%, 100%, .08);
+  --btn-hover-line: #ff6900;
+  --switch-off: #373e44;
+  --switch-knob: #9aa4ad;
+  --row-bg: hsla(0, 0%, 100%, .04);
+  --chip-bg: hsla(0, 0%, 100%, .08);
+  --code-bg: #0a0a0c;
+  --code-fg: #b6bec4;
+  --toast-bg: #1a1b20;
+  --scroll-thumb: #373e44;
+  --pill-bg: hsla(0, 0%, 100%, .08);
+  --pill-fg: #d0d0d0;
+  --pill-line: hsla(0, 0%, 100%, .15);
+  --accent-soft: rgba(255, 105, 0, .35);
+  --accent-row: rgba(255, 105, 0, .08);
+  --accent-row-line: rgba(255, 105, 0, .5);
+  --accent-chip: rgba(255, 105, 0, .16);
+  --accent-chip-line: rgba(255, 105, 0, .35);
+  --device-glow: rgba(255, 105, 0, .12);
+  --accent-glow: rgba(255, 105, 0, .24);
+  --accent-focus: rgba(255, 105, 0, .6);
+  --ok-soft: rgba(77, 190, 149, .45);
+  --ok-glow: rgba(77, 190, 149, .55);
+  --danger-soft: rgba(216, 79, 104, .5);
+  --shadow-strong: 0 .75rem 4rem rgba(0, 0, 0, .65);
+  --banner-bg: rgba(246, 200, 106, .08);
+  --banner-line: rgba(246, 200, 106, .3);
+  --banner-fg: #f6c86a;
+  --banner-err-bg: rgba(216, 79, 104, .1);
+  --banner-err-line: rgba(216, 79, 104, .35);
+  --banner-err-fg: #eba3b0;
+
+  /* One-off overlays that used to be hard-coded hsla() whites. Kept as
+     variables so the light theme can flip them without touching selectors. */
+  --hairline: hsla(0, 0%, 100%, .08);
+  --hairline-soft: hsla(0, 0%, 100%, .06);
+  --input-line: hsla(0, 0%, 100%, .15);
+  --card-bg: hsla(0, 0%, 85%, .03);
+  --card-line: hsla(0, 0%, 100%, .08);
+  /* The 1 px card hairline gradient; dark shows white glass, light shows ink. */
+  --hair-a: rgba(255, 255, 255, .10);
+  --hair-b: rgba(255, 255, 255, .30);
+  --nav-hover-bg: hsla(0, 0%, 100%, .05);
+  --nav-active-bg: #82828233;
+  --nav-active-shadow: 0 1px 2px rgba(0, 0, 0, .6);
+  --content-glow: rgba(255, 105, 0, .08);
+  --metric-dt: hsla(0, 0%, 100%, .5);
+  --rail-line: hsla(0, 0%, 100%, .06);
+  /* The brand mark is a white PNG; on a light rail it must become ink. */
+  --logo-filter: none;
+  --verdict-ok-bg: hsla(145, 60%, 45%, .14);
+  --verdict-ok-line: hsla(145, 60%, 45%, .4);
+  --verdict-ok-fg: hsl(145, 60%, 62%);
+  --verdict-no-bg: hsla(0, 70%, 55%, .14);
+  --verdict-no-line: hsla(0, 70%, 55%, .42);
+  --verdict-no-fg: hsl(0, 75%, 72%);
+
+  --font-ui: "OPPO Sans 4.0", "OPPO Sans", "HarmonyOS Sans SC", "MiSans",
+    "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+  --font-num: DIN, "Bahnschrift", "OPPO Sans 4.0", var(--font-ui);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  --bg: #f5f6f8;
+  --bg-soft: #eef0f3;
+  --surface: #ffffff;
+  --surface-2: #eef0f3;
+  --line: #d8dde3;
+  --line-soft: #e4e8ed;
+  --text: #191c20;
+  --text-dim: #4d565f;
+  --text-faint: #7b8590;
+  /* Slightly deepened accent so orange text keeps ≥3:1 on white. */
+  --accent: #f25f00;
+  --accent-2: #ff7a1f;
+  --warn: #9a6b00;
+  --danger: #c23b53;
+  --ok: #1d9e71;
+  --shadow: 0 .25rem 1.5rem rgba(23, 30, 40, .08);
+
+  --rail-bg: linear-gradient(180deg, #ffffff 0%, #f2f4f7 100%);
+  --heading: #191c20;
+  --label: #3c444d;
+  --on-accent: #fff;
+  --track: #d8dde3;
+  --input-bg: #ffffff;
+  --btn-hover-bg: rgba(15, 22, 32, .06);
+  --btn-hover-line: #f25f00;
+  --switch-off: #c8cfd8;
+  --switch-knob: #ffffff;
+  --row-bg: rgba(15, 22, 32, .035);
+  --chip-bg: rgba(15, 22, 32, .06);
+  --code-bg: #f2f4f7;
+  --code-fg: #3d454d;
+  --toast-bg: #ffffff;
+  --scroll-thumb: #c3cad2;
+  --pill-bg: rgba(15, 22, 32, .06);
+  --pill-fg: #3c444d;
+  --pill-line: rgba(15, 22, 32, .14);
+  --accent-soft: rgba(242, 95, 0, .45);
+  --accent-row: rgba(242, 95, 0, .07);
+  --accent-row-line: rgba(242, 95, 0, .45);
+  --accent-chip: rgba(242, 95, 0, .12);
+  --accent-chip-line: rgba(242, 95, 0, .4);
+  --device-glow: rgba(242, 95, 0, .08);
+  --accent-glow: rgba(242, 95, 0, .16);
+  --accent-focus: rgba(242, 95, 0, .55);
+  --ok-soft: rgba(29, 158, 113, .4);
+  --ok-glow: rgba(29, 158, 113, .4);
+  --danger-soft: rgba(194, 59, 83, .4);
+  --shadow-strong: 0 .5rem 2rem rgba(23, 30, 40, .16);
+  --banner-bg: rgba(154, 107, 0, .08);
+  --banner-line: rgba(154, 107, 0, .3);
+  --banner-fg: #7c5600;
+  --banner-err-bg: rgba(194, 59, 83, .08);
+  --banner-err-line: rgba(194, 59, 83, .3);
+  --banner-err-fg: #a12d43;
+
+  --hairline: rgba(15, 22, 32, .1);
+  --hairline-soft: rgba(15, 22, 32, .07);
+  --input-line: rgba(15, 22, 32, .18);
+  --card-bg: #ffffff;
+  --card-line: #dfe3e9;
+  --hair-a: rgba(15, 22, 32, .04);
+  --hair-b: rgba(15, 22, 32, .10);
+  --nav-hover-bg: rgba(15, 22, 32, .05);
+  --nav-active-bg: rgba(15, 22, 32, .09);
+  --nav-active-shadow: 0 1px 2px rgba(23, 30, 40, .12);
+  --content-glow: rgba(242, 95, 0, .07);
+  --metric-dt: rgba(25, 28, 32, .55);
+  --rail-line: #e2e6eb;
+  --logo-filter: brightness(0);
+  --verdict-ok-bg: hsla(150, 55%, 40%, .1);
+  --verdict-ok-line: hsla(150, 55%, 40%, .35);
+  --verdict-ok-fg: #157a53;
+  --verdict-no-bg: hsla(0, 65%, 50%, .08);
+  --verdict-no-line: hsla(0, 65%, 50%, .35);
+  --verdict-no-fg: #b03046;
+}
+
+* { box-sizing: border-box; }
+
+.hidden { display: none !important; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.5 var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  display: grid;
+  grid-template-columns: 208px 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── rail ─────────────────────────────────────────────── */
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 18px 14px;
+  background: var(--rail-bg);
+  border-right: 1px solid var(--rail-line);
+}
+
+.brand { display: flex; align-items: center; gap: 10px; padding: 0 4px; }
+
+/* Brand mark: the real Xuanyuan (Metaphyuni) logo, extracted from the vendor
+   driver and recoloured white for the dark rail. Rendered at native sharpness;
+   the light theme recolours it with a filter instead of shipping a second PNG. */
+.brand-mark {
+  width: 36px; height: 36px;
+  object-fit: contain;
+  flex: none;
+  user-select: none;
+  filter: var(--logo-filter);
+}
+
+.brand-text { display: flex; flex-direction: column; line-height: 1.25; }
+.brand-text strong { font-size: 14px; }
+/* The device name is filled in at runtime and can be long ("玄熊猫 · P1 Pro
+   Max"); the rail is narrow, so clip it rather than let it wrap the layout. */
+.brand-text span {
+  font-size: 11px; color: var(--text-faint);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+#nav { display: flex; flex-direction: column; gap: 4px; }
+
+/* Nav follows the velota-segmented recipe: quiet pill, active state gets the
+   grey fill plus the pressed shadow, text steps greys-300 → greys-100. */
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: .5rem;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background .2s ease, color .2s ease;
+}
+
+.nav-item i {
+  width: 18px; text-align: center; font-style: normal; font-size: 13px; opacity: .9;
+}
+
+.nav-item:hover { background: var(--nav-hover-bg); color: var(--text); }
+.nav-item.active {
+  background: var(--nav-active-bg);
+  box-shadow: var(--nav-active-shadow);
+  color: var(--text);
+}
+.nav-item.active i { color: var(--accent); }
+
+/* ── theme switch ─────────────────────────────────────── */
+
+/* Three-way segmented control (跟随系统 / 浅色 / 深色). Sits above the rail
+   footer, styled like the nav pills so it reads as part of the rail. */
+.theme-switch {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: .625rem;
+  background: var(--chip-bg);
+  border: 1px solid var(--hairline-soft);
+}
+
+.theme-switch button {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 7px 2px 6px;
+  border: 0;
+  border-radius: .4375rem;
+  background: transparent;
+  color: var(--text-faint);
+  font: inherit;
+  font-size: 10.5px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+
+.theme-switch button i {
+  font-style: normal;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.theme-switch button:hover { color: var(--text); }
+.theme-switch button.active {
+  background: var(--nav-active-bg);
+  box-shadow: var(--nav-active-shadow);
+  color: var(--text);
+}
+.theme-switch button.active i { color: var(--accent); }
+
+.rail-foot {
+  margin-top: auto;
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px;
+  font-size: 12px; color: var(--text-faint);
+  border-top: 1px solid var(--rail-line);
+}
+
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-faint); }
+.dot.on { background: var(--ok); box-shadow: 0 0 8px var(--ok-glow); }
+.dot.off { background: var(--danger); }
+
+/* ── content ──────────────────────────────────────────── */
+
+.content {
+  display: flex; flex-direction: column;
+  padding: 20px 26px 26px;
+  overflow: hidden;
+  background:
+    radial-gradient(900px 420px at 78% -8%, var(--content-glow), transparent 70%),
+    var(--bg);
+}
+
+.topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.topbar h1 { margin: 0; font-size: 20px; font-weight: 650; letter-spacing: .2px; }
+.sub { margin: 2px 0 0; color: var(--text-faint); font-size: 12.5px; }
+.topbar-actions { display: flex; gap: 8px; }
+
+.banner {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: .5rem;
+  background: var(--banner-bg);
+  border: 1px solid var(--banner-line);
+  color: var(--banner-fg);
+  font-size: 13px;
+}
+
+.banner.err { background: var(--banner-err-bg); border-color: var(--banner-err-line); color: var(--banner-err-fg); }
+.banner { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.banner.hidden { display: none; }
+.banner .btn { padding: 5px 12px; font-size: 12.5px; }
+.banner .btn.hidden { display: none; }
+
+.page { display: none; margin-top: 18px; overflow-y: auto; padding-right: 4px; }
+.page.active { display: block; }
+
+.page::-webkit-scrollbar { width: 10px; }
+.page::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 8px; }
+
+/* ── cards ────────────────────────────────────────────── */
+
+.card {
+  position: relative;
+  background: var(--card-bg);
+  border: 1px solid var(--card-line);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow);
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+/* 1 px gradient hairline, drawn with a mask so it does not fill the card —
+   the detail that makes velota cards read as glass. */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(160deg, var(--hair-a), var(--hair-b) 50%, var(--hair-a));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: .7;
+  pointer-events: none;
+}
+
+.card h3 { margin: 0 0 12px; font-size: 14px; font-weight: 600; color: var(--heading); }
+.card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.card-head h3 { margin: 0; }
+
+.grid.two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 900px) { .grid.two { grid-template-columns: 1fr; } }
+
+/* ── device card ──────────────────────────────────────── */
+
+.device-card {
+  display: grid;
+  grid-template-columns: 132px 1fr;
+  gap: 18px;
+  align-items: center;
+  background:
+    radial-gradient(600px 160px at 12% 0%, var(--device-glow), transparent 70%),
+    var(--card-bg);
+}
+
+.device-art { display: grid; place-items: center; }
+
+/* Real product render (assets/devices.json). Kept inside a fixed box so
+   switching between devices with different aspect ratios (mice vs. keyboard
+   top-views) does not shift layout — the box caps both dimensions and the
+   image scales proportionally inside it. */
+.device-img {
+  max-height: 176px;
+  max-width: 240px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, .35));
+  user-select: none;
+}
+
+.device-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.device-head h2 { margin: 0; font-size: 18px; font-weight: 650; }
+
+.pill {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--pill-bg);
+  color: var(--pill-fg);
+  font-size: 11.5px;
+  border: 1px solid var(--pill-line);
+}
+
+/* auto-fit instead of a fixed 4: on a narrow window four nowrap columns push
+   the last one (firmware) out past the window edge, invisible. */
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px 18px; margin: 0; }
+.metrics .metric { min-width: 0; }
+.metrics dt { color: var(--metric-dt); font-size: 12px; }
+.metrics dd {
+  margin: 4px 0 0;
+  font-size: 22px; font-weight: 650;
+  font-family: var(--font-num);
+  letter-spacing: .3px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.metrics dd.sm { font-size: 15px; font-weight: 600; }
+
+/* Two equal readings stacked in one metric — mouse firmware over receiver
+   firmware. Both rows share the label and value sizes on purpose; the receiver
+   used to be demoted to a faint 11.5 px hint while the mouse got full size. */
+.metrics dd.pair {
+  display: flex; flex-direction: column; gap: 3px;
+  font-size: 18px; font-weight: 650; font-family: var(--font-num);
+}
+.metrics dd.pair span { display: flex; align-items: baseline; gap: 7px; }
+.metrics dd.pair i {
+  font-style: normal;
+  font-size: 12px; font-weight: 500;
+  color: var(--text-faint);
+  font-family: var(--font-ui, inherit);
+  width: 38px; flex: none;
+  letter-spacing: 0;
+}
+.metrics dd.pair b { font-weight: 650; font-variant-numeric: tabular-nums; }
+
+.unit { font-size: 12px; color: var(--text-faint); margin-left: 3px; font-weight: 500; }
+.hint { font-size: 11.5px; color: var(--text-faint); margin-top: 2px; }
+
+/* Firmware page: the compatibility verdict is the one thing on the page that
+   matters, so it gets its own block rather than sitting in a table row. */
+.fw-verdict {
+  padding: 10px 12px; border-radius: 8px; margin: 10px 0 4px;
+  font-size: 13px; line-height: 1.5;
+}
+.fw-verdict.ok {
+  background: var(--verdict-ok-bg);
+  border: 1px solid var(--verdict-ok-line);
+  color: var(--verdict-ok-fg);
+}
+.fw-verdict.no {
+  background: var(--verdict-no-bg);
+  border: 1px solid var(--verdict-no-line);
+  color: var(--verdict-no-fg);
+}
+.fw-result code { font-family: var(--font-num); font-size: 12px; }
+
+.bar { height: 5px; border-radius: 3px; background: var(--track); margin-top: 8px; overflow: hidden; }
+.bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .3s; }
+
+/* ── generic controls ─────────────────────────────────── */
+
+.row { display: flex; gap: 8px; align-items: center; }
+.row.wrap { flex-wrap: wrap; }
+
+.btn {
+  padding: 8px 14px;
+  border-radius: .5rem;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color .15s, background .15s, opacity .15s;
+}
+.btn:hover:not(:disabled) { border-color: var(--btn-hover-line); background: var(--btn-hover-bg); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.primary {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--on-accent);
+  font-weight: 650;
+}
+.btn.primary:hover:not(:disabled) { background: var(--accent-2); }
+.btn.ghost { background: transparent; }
+/* Destructive action (firmware flash): the danger colour on both themes,
+ * with the same on-colour treatment as .primary so the label stays readable. */
+.btn.danger {
+  background: var(--danger);
+  border-color: transparent;
+  color: #fff;
+  font-weight: 650;
+}
+.btn.danger:hover:not(:disabled) { filter: brightness(1.08); }
+
+/* A small label on a card head: "4K 接收器". */
+.chip {
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--card-bg);
+  border: 1px solid var(--hairline);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Three colour pickers in a row, each with its own step label. */
+.rgb-colors {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 10px;
+  padding: 12px 0 4px;
+}
+.rgb-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+/* The native swatch is the clearest control here, so keep it but strip the
+   chrome the OS draws around it. */
+.rgb-pick input[type='color'] {
+  width: 100%;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  background: var(--input-bg);
+  cursor: pointer;
+}
+.rgb-pick input[type='color']::-webkit-color-swatch-wrapper { padding: 3px; }
+.rgb-pick input[type='color']::-webkit-color-swatch { border: none; border-radius: 6px; }
+
+.field { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 9px 0; border-bottom: 1px solid var(--hairline-soft); }
+.field:last-of-type { border-bottom: 0; }
+.field label { color: var(--label); }
+.field-control { display: flex; align-items: center; gap: 10px; }
+.field output { min-width: 56px; text-align: right; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+
+input[type="number"], select {
+  padding: 7px 10px;
+  border-radius: .5rem;
+  border: 1px solid var(--input-line);
+  background: var(--input-bg);
+  color: var(--text);
+  font: inherit;
+  min-width: 96px;
+}
+
+input[type="range"] { width: 190px; accent-color: var(--accent); }
+
+.switch { position: relative; display: inline-block; width: 42px; height: 24px; }
+.switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+.switch span {
+  position: absolute; inset: 0;
+  background: var(--switch-off); border-radius: 999px; cursor: pointer;
+  transition: background .18s;
+}
+.switch span::after {
+  content: ""; position: absolute; top: 3px; left: 3px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--switch-knob); transition: transform .18s, background .18s;
+}
+.switch input:checked + span { background: var(--accent-soft); }
+.switch input:checked + span::after { transform: translateX(18px); background: var(--accent); }
+
+.kv { list-style: none; margin: 0; padding: 0; }
+.kv li { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--hairline-soft); }
+.kv li:last-child { border-bottom: 0; }
+.kv span { color: var(--text-dim); }
+.kv b { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.note { color: var(--text-faint); font-size: 12px; margin: 10px 0 0; }
+.note code, .raw code { background: var(--input-bg); padding: 1px 5px; border-radius: 5px; font-size: 11.5px; }
+
+/* ── button assignment table ──────────────────────────── */
+
+.key-table { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+
+.key-row {
+  display: grid;
+  grid-template-columns: 64px minmax(180px, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 9px 12px;
+  border-radius: .5rem;
+  background: var(--row-bg);
+  border: 1px solid var(--hairline-soft);
+}
+
+.key-row.key-dirty { border-color: var(--accent); }
+
+.key-row .key-name {
+  color: var(--text-dim);
+  font-weight: 600;
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.key-row select { width: 100%; }
+
+/* The combination editor sits under the dropdown, across both columns, so the
+   row it belongs to stays obvious. */
+.key-editor {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 8px;
+  margin-top: 2px;
+  border-top: 1px dashed var(--hairline);
+}
+.combo-mods { display: flex; gap: 14px; flex-wrap: wrap; }
+.combo-mods label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.combo-keys { display: flex; align-items: center; gap: 10px; }
+.combo-keys select { flex: 1 1 auto; }
+.combo-preview {
+  flex: none;
+  min-width: 96px;
+  text-align: right;
+  font-size: 12.5px;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Macro steps: one line per step, modifiers then key then hold time. */
+.macro-head { display: flex; gap: 10px; }
+.macro-head input {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: var(--field-bg);
+  color: var(--text);
+  border: 1px solid var(--hairline);
+  border-radius: .45rem;
+  padding: 6px 9px;
+  font: inherit;
+  font-size: 12.5px;
+}
+.macro-head select { flex: none; width: 150px; }
+.macro-steps { display: flex; flex-direction: column; gap: 6px; }
+.macro-step {
+  display: grid;
+  grid-template-columns: minmax(210px, auto) minmax(120px, 1fr) 74px auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: .45rem;
+  background: var(--row-bg);
+  border: 1px solid var(--hairline-soft);
+}
+.macro-step input[type="number"] {
+  width: 100%;
+  background: var(--field-bg);
+  color: var(--text);
+  border: 1px solid var(--hairline);
+  border-radius: .4rem;
+  padding: 5px 7px;
+  font: inherit;
+  font-size: 12px;
+}
+.macro-actions { display: flex; align-items: center; gap: 12px; }
+.macro-actions .note.over { color: var(--danger, #d9534f); }
+.btn.tiny { padding: 3px 9px; font-size: 12px; border-radius: .4rem; }
+
+.key-row.key-custom .key-name::after {
+  content: " 自定义";
+  color: var(--text-faint);
+  font-weight: 400;
+  font-size: 11px;
+}
+
+/* ── dpi list ─────────────────────────────────────────── */
+
+.dpi-list { display: flex; flex-direction: column; gap: 8px; }
+
+.dpi-row {
+  display: grid;
+  grid-template-columns: 40px 136px minmax(110px, 1fr) 132px 96px;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: .5rem;
+  background: var(--row-bg);
+  border: 1px solid transparent;
+  transition: border-color .15s, background .15s;
+}
+
+.dpi-row.active { border-color: var(--accent-row-line); background: var(--accent-row); }
+
+.dpi-idx {
+  width: 26px; height: 26px; display: grid; place-items: center;
+  border-radius: .375rem; background: var(--chip-bg); color: var(--text-dim);
+  font-size: 12px; font-weight: 600;
+}
+.dpi-row.active .dpi-idx { background: var(--accent-glow); color: var(--accent); }
+
+.dpi-input {
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: .375rem;
+  border: 1px solid var(--input-line);
+  background: var(--input-bg);
+  color: var(--text);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.dpi-input:focus { outline: 1px solid var(--accent-focus); border-color: transparent; }
+
+/* X CPI and the Y tag share one cell, so the Y reading does not need a column
+   of its own — most mice never have a distinct Y, and the grid would reserve
+   the space for nothing. */
+.dpi-xy { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.dpi-xy .dpi-input { flex: 1 1 auto; min-width: 0; }
+.dpi-y {
+  flex: none;
+  font-size: 11.5px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dpi-slider { width: 100%; accent-color: var(--accent); }
+
+.swatch { width: 34px; height: 24px; border-radius: 6px; border: 1px solid var(--input-line); }
+.dpi-color { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--text-faint); white-space: nowrap; }
+
+.dpi-badge {
+  justify-self: end;
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--accent-chip);
+  color: var(--accent);
+  border: 1px solid var(--accent-chip-line);
+}
+
+.dpi-btn { justify-self: end; font-size: 12px; padding: 5px 10px; border-radius: .375rem; }
+
+/* ── raw / log ────────────────────────────────────────── */
+
+.raw {
+  margin: 0;
+  padding: 12px;
+  border-radius: .5rem;
+  background: var(--code-bg);
+  border: 1px solid var(--hairline-soft);
+  color: var(--code-fg);
+  font: 12px/1.7 "Cascadia Code", "Consolas", monospace;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 260px;
+  overflow: auto;
+}
+.raw.log { max-height: 200px; color: var(--text-dim); }
+
+/* ── toast ────────────────────────────────────────────── */
+
+.toast {
+  position: fixed;
+  right: 22px; bottom: 22px;
+  max-width: 460px;
+  padding: 12px 16px;
+  border-radius: .5rem;
+  background: var(--toast-bg);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-strong);
+  font-size: 13px;
+  z-index: 20;
+  animation: rise .18s ease-out;
+}
+.toast.ok { border-color: var(--ok-soft); }
+.toast.err { border-color: var(--danger-soft); }
+.toast.hidden { display: none; }
+
+@keyframes rise { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* ── connection page ────────────────────────────────── */
+
+.link-state {
+  display: grid;
+  grid-template-columns: 148px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.link-badge {
+  display: grid;
+  place-items: center;
+  min-height: 86px;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  font-size: 15px;
+  font-weight: 650;
+  text-align: center;
+}
+.link-badge.on {
+  color: var(--ok);
+  border-color: var(--ok-soft);
+  background: var(--accent-row);
+}
+.link-badge.off {
+  color: var(--danger);
+  border-color: var(--danger-soft);
+}
+
+.steps {
+  margin: 0 0 14px;
+  padding-left: 20px;
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.85;
+}
+.steps b { color: var(--text); }

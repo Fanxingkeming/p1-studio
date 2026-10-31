@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Metaphyuni玄熊猫P1管理器</title>
+<script>
+// Apply the saved theme before the stylesheet paints — a theme that flashes
+// white on a dark app (or the reverse) reads as a bug, not a preference.
+// The Rust-side settings file is the source of truth and corrects this in
+// boot(); localStorage only has to be instant.
+(function () {
+  var mode = 'system';
+  try { mode = localStorage.getItem('theme.mode') || mode; } catch (e) {}
+  var dark = mode === 'dark' ||
+    (mode !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+})();
+</script>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="app">
+  <!-- left rail -->
+  <aside class="rail">
+    <div class="brand">
+      <img class="brand-mark" src="assets/logo.png" alt="玄派" draggable="false" />
+      <div class="brand-text">
+        <strong>Metaphyuni玄熊猫P1管理器</strong>
+        <!-- Filled in from the product catalogue once a device answers, so the
+             header names the receiver actually plugged in. -->
+        <span id="brand-device">未连接设备</span>
+      </div>
+    </div>
+
+    <nav id="nav">
+      <button class="nav-item active" data-page="overview"><i>◉</i><span>概览</span></button>
+      <button class="nav-item" data-page="dpi"><i>◎</i><span>DPI</span></button>
+      <button class="nav-item" data-page="buttons"><i>⌘</i><span>按键</span></button>
+      <button class="nav-item" data-page="performance"><i>↯</i><span>性能</span></button>
+      <button class="nav-item" data-page="power"><i>⏻</i><span>省电</span></button>
+      <button class="nav-item" data-page="connection"><i>⇄</i><span>连接</span></button>
+      <button class="nav-item" data-page="firmware"><i>⇪</i><span>固件</span></button>
+      <button class="nav-item" data-page="diagnostics"><i>⚙</i><span>诊断</span></button>
+    </nav>
+
+    <!-- Theme modes: follow the OS, or force light/dark. The choice is kept
+         in the app settings file (see load_settings/save_settings). -->
+    <div class="theme-switch" role="radiogroup" aria-label="主题模式">
+      <button type="button" data-mode="system" role="radio" aria-checked="false" title="跟随系统">
+        <i>◐</i><span>自动</span>
+      </button>
+      <button type="button" data-mode="light" role="radio" aria-checked="false" title="浅色模式">
+        <i>☀</i><span>浅色</span>
+      </button>
+      <button type="button" data-mode="dark" role="radio" aria-checked="false" title="深色模式">
+        <i>☾</i><span>深色</span>
+      </button>
+    </div>
+
+    <div class="rail-foot">
+      <div id="conn-dot" class="dot off"></div>
+      <span id="conn-text">未连接</span>
+    </div>
+  </aside>
+
+  <!-- main -->
+  <main class="content">
+    <header class="topbar">
+      <div>
+        <h1 id="page-title">概览</h1>
+        <p id="page-sub" class="sub">设备状态与快捷操作</p>
+      </div>
+      <div class="topbar-actions">
+        <button id="btn-refresh" class="btn ghost">重新读取</button>
+        <button id="btn-apply" class="btn primary" title="Ctrl+Enter" disabled>应用更改</button>
+      </div>
+    </header>
+
+    <div id="banner" class="banner hidden"><span id="banner-text"></span><button id="banner-action" class="btn ghost hidden">唤醒设备</button></div>
+
+    <!-- overview -->
+    <section class="page active" id="page-overview">
+      <div class="card device-card">
+        <div class="device-art" aria-hidden="true">
+          <!-- Real product render, picked from assets/devices.json by device
+               name. The inline SVG underneath is the fallback for mice that
+               are not in the manifest yet. -->
+          <img id="device-img" class="device-img hidden" alt="" draggable="false" />
+          <svg id="device-svg" viewBox="0 0 120 190" width="112" height="176">
+            <defs>
+              <linearGradient id="shell" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#2b3444"/>
+                <stop offset="55%" stop-color="#1b2230"/>
+                <stop offset="100%" stop-color="#11161f"/>
+              </linearGradient>
+            </defs>
+            <path d="M60 6c30 0 50 22 51 62l2 66c1 32-22 50-53 50s-54-18-53-50l2-66C10 28 30 6 60 6z"
+                  fill="url(#shell)" stroke="#3b4759" stroke-width="2"/>
+            <path d="M58 8C34 10 16 30 14 66l-1 15c22 8 44 10 45 10V8z" fill="#232c3a" opacity=".85"/>
+            <path d="M62 8c24 2 42 22 44 58l1 15c-22 8-44 10-45 10V8z" fill="#28313f" opacity=".85"/>
+            <rect x="53" y="26" width="14" height="34" rx="7" fill="#0d1117" stroke="#3b4759"/>
+            <path d="M50 150c6 8 14 8 20 0" stroke="var(--accent)" stroke-width="3" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="device-body">
+          <div class="device-head">
+            <h2 id="dev-name">未检测到设备</h2>
+            <span id="dev-mode" class="pill">—</span>
+          </div>
+          <dl class="metrics">
+            <div class="metric">
+              <dt>电量</dt>
+              <dd><span id="m-battery">—</span><span class="unit">%</span></dd>
+              <div class="bar"><span id="m-battery-bar" style="width:0%"></span></div>
+              <div class="hint" id="m-battery-hint"></div>
+            </div>
+            <div class="metric">
+              <dt>当前 DPI</dt>
+              <dd><span id="m-dpi">—</span><span class="unit">CPI</span></dd>
+              <div class="hint">第 <span id="m-stage">—</span> 档</div>
+            </div>
+            <div class="metric">
+              <dt>回报率</dt>
+              <dd><span id="m-rate">—</span></dd>
+              <div class="hint">读取自设备</div>
+            </div>
+            <div class="metric">
+              <dt>固件版本</dt>
+              <!-- Mouse and receiver firmware are peers: same label size, same
+                   value size. The receiver used to sit in a 11.5 px hint line. -->
+              <dd class="pair">
+                <span><i>鼠标</i><b id="m-fw-mouse">—</b></span>
+                <span><i>接收器</i><b id="m-fw-dongle">—</b></span>
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      <div class="grid two">
+        <div class="card">
+          <h3>快速操作</h3>
+          <div class="row wrap">
+            <button class="btn" id="btn-restore-stages">恢复出厂 DPI 档位</button>
+            <button class="btn" id="btn-export">导出配置</button>
+            <button class="btn" id="btn-import">导入配置</button>
+          </div>
+          <p class="note" id="quick-note">所有数值都直接读自接收器，不做推测或缓存。</p>
+        </div>
+        <div class="card">
+          <h3>当前设定</h3>
+          <ul class="kv" id="overview-kv">
+            <li><span>防抖</span><b id="kv-debounce">—</b></li>
+            <li><span>自动休眠</span><b id="kv-sleep">—</b></li>
+            <li><span>运动同步</span><b id="kv-motion">—</b></li>
+            <li><span>波纹控制</span><b id="kv-ripple">—</b></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- dpi -->
+    <section class="page" id="page-dpi">
+      <div class="card">
+        <div class="card-head">
+          <h3>DPI 档位</h3>
+          <span class="note">共 <b id="dpi-count">—</b> 档 · 步进 50 CPI · 上限 26000</span>
+        </div>
+        <div class="field">
+          <label for="in-stage-count">按 DPI 键循环几档</label>
+          <div class="field-control">
+            <select id="in-stage-count"></select>
+          </div>
+        </div>
+        <div id="dpi-list" class="dpi-list"></div>
+      </div>
+      <div class="card">
+        <h3>说明</h3>
+        <p class="note">
+          八条档位记录一直都存在（<code>0x0C</code> 起，每档 4 字节），这个下拉框改的是设备里
+          <code>0x0080</code> 的「生效档位数」—— 决定按鼠标上的 DPI 键时循环到第几档为止。
+          同方案驱动把它做成可选项：Darmoshark 叫 <code>DPI Count</code>，Pulsar 的
+          <code>Config.ini</code> 里是 <code>DPIMaxGrade = 6</code>；本机出厂值是 7。
+        </p>
+        <p class="note">
+          高亮的是设备此刻正在使用的档位，鼠标上的 DPI 键切换后会即时跟手。
+          每档记录为 4 字节，末字节是 <code>0x55 - 前三个字节之和</code> 的校验；写入只发送变化的记录，最后补一帧提交帧。
+        </p>
+        <p class="note">
+          记录的前两个字节分别是 <b>X 轴</b>与 <b>Y 轴</b>的 CPI。官方驱动允许两轴不同，
+          所以读到不一致时这里会显示 <code>× Y</code>。本应用只写两轴相同的档位 ——
+          独立两轴的高字节编码还没有实测依据，猜错会让灵敏度变成另一个数量级。
+        </p>
+      </div>
+    </section>
+
+    <!-- performance -->
+    <section class="page" id="page-performance">
+      <div class="card">
+        <h3>传感器</h3>
+        <div class="field">
+          <label for="in-debounce">按键防抖</label>
+          <div class="field-control">
+            <input id="in-debounce" type="range" min="0" max="32" step="1" value="8" />
+            <output id="out-debounce">8 ms</output>
+          </div>
+        </div>
+        <p class="note">
+          配置块里有<b>两个</b>防抖字节：<code>0x0084</code> 是厂商驱动编辑的那条 4 字节记录，
+          <code>0x00A9</code> 是「高级设置行」的第一个字节。本机实测两者互不影响 ——
+          写一个、读另一个，两个方向都不联动。出厂时两处都是 8，所以这里两个都写，避免改到固件不读的那一份。
+        </p>
+        <div class="field">
+          <label>运动同步</label>
+          <div class="field-control">
+            <label class="switch"><input type="checkbox" id="in-motion" /><span></span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label>波纹控制</label>
+          <div class="field-control">
+            <label class="switch"><input type="checkbox" id="in-ripple" /><span></span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label>角度修正</label>
+          <div class="field-control">
+            <label class="switch"><input type="checkbox" id="in-angle" /><span></span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label for="in-lod">LOD 抬升高度</label>
+          <div class="field-control">
+            <select id="in-lod">
+              <option value="3">低</option>
+              <option value="1">中</option>
+              <option value="2">高</option>
+            </select>
+          </div>
+        </div>
+        <p class="note">
+          LOD 的三个存储值不按大小排序：1 是「中」，2 是「高」，3 是「低」。本机读到的出厂值是 1（中）。
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>DPI 指示灯（滚轮灯）</h3>
+          <span class="chip">0x4C–0x52</span>
+        </div>
+        <p class="sub">这颗鼠标唯一会亮的灯就是滚轮，也就是这里控制的 DPI 指示灯。</p>
+        <div class="field">
+          <label for="in-dpil-mode">灯效模式</label>
+          <div class="field-control">
+            <select id="in-dpil-mode">
+              <option value="0">关闭</option>
+              <option value="1">常亮</option>
+              <option value="2">呼吸</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="in-dpil-bright">亮度</label>
+          <div class="field-control">
+            <input id="in-dpil-bright" type="range" min="1" max="10" step="1" value="5" />
+            <output id="out-dpil-bright">5</output>
+          </div>
+        </div>
+        <div class="field">
+          <label for="in-dpil-speed">呼吸速度</label>
+          <div class="field-control">
+            <input id="in-dpil-speed" type="range" min="1" max="5" step="1" value="3" />
+            <output id="out-dpil-speed">3</output>
+          </div>
+        </div>
+        <p class="note">
+          鼠标上指示当前 DPI 档位的那颗灯。模式和总开关是两个字节（<code>0x4C</code> 与 <code>0x52</code>），写入时必须一起动 —— 只改模式、不动开关，灯还是不亮。
+          亮度不是线性刻度：滑杆 1–10 档经厂商对照表映射到字节（<code>0x10 / 0x1E×n / 0x80 / 0xE6 / 0xFF</code>）。
+          地址与编码来自同一闪存布局的 CompX 方案驱动，字节布局已在本机核对。
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>回报率</h3>
+          <div class="row">
+            <select id="in-rate"></select>
+            <button class="btn primary" id="btn-rate-apply" disabled>应用</button>
+          </div>
+        </div>
+        <p class="note" id="rate-note">读取中…</p>
+        <p class="note">
+          官方驱动与本程序同时连着同一只鼠标会互相打断对方的通信，用它之前请先退出官方 MetaHub。
+          协议值为 <code>08 / 04 / 02 / 01 / 10 / 20</code>，对应 125 至 4000 Hz，
+          来自第三方 FerrisPulse 对官方驱动的抓包，并在 4K 接收器上逐档写入、回读验证。
+          写入后本程序会重新读取 <code>0x0000</code> 与设备核对，核对不上就报错，不假装成功。
+        </p>
+      </div>
+
+      <div class="card hidden" id="card-rgb">
+        <div class="card-head">
+          <h3>接收器指示灯</h3>
+          <span class="chip">4K 接收器</span>
+        </div>
+        <div class="field">
+          <label for="in-rgb-mode">灯效模式</label>
+          <div class="field-control">
+            <select id="in-rgb-mode">
+              <option value="1">连接状态</option>
+              <option value="2">电量状态</option>
+              <option value="3">仅电量</option>
+            </select>
+          </div>
+        </div>
+        <div class="rgb-colors">
+          <label class="rgb-pick"><input type="color" id="in-rgb-1" value="#00ff00" /><span id="lbl-rgb-1">颜色 1</span></label>
+          <label class="rgb-pick"><input type="color" id="in-rgb-2" value="#ffff00" /><span id="lbl-rgb-2">颜色 2</span></label>
+          <label class="rgb-pick"><input type="color" id="in-rgb-3" value="#ff0000" /><span id="lbl-rgb-3">颜色 3</span></label>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="btn-rgb-apply">应用</button>
+          <button class="btn ghost" id="btn-rgb-revert">还原</button>
+        </div>
+        <p class="note" id="rgb-note">读取中…</p>
+        <p class="note">
+          这是 4K 接收器上的三档指示灯，用命令 <code>0x14 / 0x15</code> 读写，
+          与官方驱动的 <code>CS_UsbServer_Set4KDongleRGB</code> 同一条链路。
+          三个颜色不是三颗灯，而是所选模式切换的三档 —— 电量模式下就是满电、半电、低电。
+          写入后本程序会重新读回核对，读不回来就如实说没有应答，不假装成功。
+        </p>
+      </div>
+
+      <div class="card hidden" id="card-longrange">
+        <div class="card-head">
+          <h3>长距离模式</h3>
+          <span class="chip">0x16 / 0x17</span>
+        </div>
+        <div class="field">
+          <label>提升无线传输距离</label>
+          <div class="field-control">
+            <label class="switch"><input type="checkbox" id="in-longrange" /><span></span></label>
+          </div>
+        </div>
+        <p class="note" id="longrange-note">读取中…</p>
+        <p class="note">
+          用 <code>0x16</code> 写入、<code>0x17</code> 读回，需要 10 字节载荷 —— 写 1 到 2 字节设备会直接回「拒绝」。
+          官方驱动同样只在无线模式下提供这一项，所以有线连接时这里不会出现。
+          代价是延迟，日常使用建议关闭。
+        </p>
+      </div>
+
+      <div class="card hidden" id="card-profiles">
+        <div class="card-head">
+          <h3>板载配置档</h3>
+          <span class="chip">0x0e / 0x0f</span>
+        </div>
+        <div class="field">
+          <label for="in-profile">当前配置档</label>
+          <div class="field-control">
+            <select id="in-profile"></select>
+          </div>
+        </div>
+        <p class="note" id="profile-note">读取中…</p>
+        <p class="note">
+          鼠标内部保存的配置分组，切换后 DPI、灯效等整套一起变。写 <code>0x0f</code>、读 <code>0x0e</code>，
+          载荷是 1 字节的档位序号。设备不回应 <code>0x0e</code> 说明只有一组配置，卡片会自动隐藏。
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>恢复出厂设置</h3>
+        <div class="field">
+          <label>清空设备上所有配置</label>
+          <div class="field-control">
+            <button class="btn danger" id="btn-factory-reset">恢复出厂…</button>
+          </div>
+        </div>
+        <p class="note" id="reset-note">
+          这是命令 <code>0x09</code>（ClearSetting），会把设备闪存里的全部用户配置清零：
+          DPI 档位、RGB 颜色、按键防抖、休眠设置、长距离模式、接收器灯效，全部回到出厂值。
+        </p>
+        <p class="note">
+          协议里没有任何撤销指令 —— 执行前请先在诊断页用「导出配置块」备份一份 192 字节原文。
+          本程序在日常生活中绝不自动发送这条命令，点这里也不会立刻执行。
+        </p>
+      </div>
+
+    </section>
+
+    <section class="page" id="page-buttons">
+      <div class="card">
+        <div class="card-head">
+          <h3>按键分配</h3>
+          <div class="row">
+            <button class="btn ghost" id="btn-keys-default">恢复默认</button>
+            <button class="btn primary" id="btn-keys-apply" disabled>应用修改</button>
+          </div>
+        </div>
+        <div id="key-table" class="key-table"></div>
+        <p class="note" id="keys-note">读取中…</p>
+        <p class="note">
+          六个物理键的绑定存在配置块 <code>0x60–0x77</code>，每键一条 4 字节记录：
+          <code>[类别][参数高][参数低][校验]</code>。
+          动作表与同一闪存布局的 CompX 方案驱动逐字节核对，并在本机读出了全部默认绑定（左/右/中/后退/前进/DPI 循环），六条记录校验和全部吻合。
+          <code>0x78</code> 与 <code>0x7C</code> 还有两条格式完好的记录，但本机没有任何实体键接到那两个槽位，改动不会有可见效果，因此不在页面上列出。
+        </p>
+        <p class="note">
+          安全限制：不允许把所有按键都改得不再是「左键」—— 一旦全部改掉，鼠标就没法点了。
+          应用时先写入新增的左键，再解除旧的，所以「把左键换到另一个键上」可以一次完成。
+        </p>
+        <p class="note">
+          「组合键或多媒体键…」是本机出厂留空、官方驱动也没给它做界面的那部分能力：每个按键在闪存
+          <code>0x0100 + 0x20 × 序号</code> 处有自己的 32 字节槽，按
+          <code>[事件数][事件…][校验]</code> 存一串 HID 键码 —— 修饰键也算独立事件，所以 Ctrl+C 是 4 个事件。
+          这条路径写两块地方：先写槽，再让按键记录指向它（类别 0x05），写完回读解码比对。
+          <b>本机实测有效</b>：把 DPI 键设成 Ctrl+C，按下后系统确实收到 Ctrl+C。
+        </p>
+        <p class="note">
+          「宏（多步按键序列）…」写的是 <code>0x0300</code> 起的独立区域（每按键一槽，384 字节），按键记录用类别
+          <code>0x06</code> 指向它。<b>本机实测有效</b>：把两步 F24 的宏绑到前进键，按下后系统收到两次 F24，
+          间隔与设定的 250 ms 吻合 —— 连延时字段都被采纳。
+        </p>
+        <p class="note">
+          「未在本机验证」分组里的动作同样出自那张类别表，但本机从未有人见过它们生效，其中几个连第二个字节的含义都是推测 ——
+          最坏情况是该键毫无反应，改回即可。<b>其中「纵向滚轮上/下」已在常用分组里</b>，因为它是纯鼠标动作、风险最低。
+        </p>
+      </div>
+    </section>
+
+    <!-- power -->
+    <section class="page" id="page-power">
+      <div class="card">
+        <h3>自动休眠</h3>
+        <div class="field">
+          <label for="in-sleep">闲置多久后休眠</label>
+          <div class="field-control">
+            <select id="in-sleep"></select>
+          </div>
+        </div>
+        <p class="note">
+          存在 <code>0x00AD</code>，单位 10 秒：6 = 1 分钟，180 = 30 分钟。
+          <b>本机实测过</b>：设成 1 之后约 20 秒鼠标就从链路上消失，设成 6 时几分钟都不会。
+        </p>
+        <p class="note">
+          这里以前写的是 <code>0x00B5 / 0x00B7</code>，那是错的 —— <code>0x00B5</code> 起的 6 个字节是「传感器性能行」：
+          <code>[0x00][0x55][型号低][型号高][模式][0x55-模式]</code>，<code>0x00B7</code> 是其中的型号字节（本机 <code>06 4F</code>），
+          恰好凑成 0x55 所以看起来像「值 + 校验」。改动它只会破坏型号，不会改变休眠。
+        </p>
+      </div>
+      <div class="card">
+        <h3>传感器模式</h3>
+        <div class="field">
+          <label for="in-mode">性能模式</label>
+          <div class="field-control">
+            <select id="in-mode"></select>
+          </div>
+        </div>
+        <p class="note">
+          <code>0x00B9</code>，与 <code>0x00BA</code> 构成「值 + 校验」对。0 是本机出厂值；1 对应厂商的竞技固件；
+          2 的含义没有资料，列出来只是为了让读到的值能如实显示。
+        </p>
+      </div>
+    </section>
+
+    <!-- connection -->
+    <section class="page" id="page-connection">
+      <div class="grid two">
+      <div class="card">
+        <div class="card-head">
+          <h3>当前连接</h3>
+          <button class="btn ghost" id="btn-conn-refresh">刷新</button>
+        </div>
+        <div class="link-state">
+          <div class="link-badge" id="conn-badge">检测中…</div>
+          <ul class="kv">
+            <li><span>链路</span><b id="kv-link">—</b></li>
+            <li><span>鼠标</span><b id="kv-online">—</b></li>
+            <li><span>接收器 CID</span><b id="kv-cid">—</b></li>
+            <li><span>接收器 MID</span><b id="kv-mid">—</b></li>
+            <li><span>配对状态</span><b id="kv-pair">—</b></li>
+            <li><span>产品 ID</span><b id="kv-pid">—</b></li>
+          </ul>
+        </div>
+        <p class="note">
+          链路只能判到「有线 / 2.4G / 未知」三档：软件是通过接收器与鼠标通信的，
+          鼠标切到蓝牙档后接收器就不再有任何回应，那种情况与「鼠标在待机」无法区分，所以显示为未知而不是猜一个。
+        </p>
+        <p class="note" id="conn-hint"></p>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h3>蓝牙模式状态</h3>
+          <button class="btn ghost" id="btn-ble-refresh">检测蓝牙</button>
+        </div>
+        <div class="link-state">
+          <div class="link-badge off" id="ble-badge">未检测</div>
+          <ul class="kv">
+            <li><span>设备</span><b id="ble-name">—</b></li>
+            <li><span>蓝牙地址</span><b id="ble-addr">—</b></li>
+            <li><span>连接状态</span><b id="ble-connected">—</b></li>
+            <li><span>电量（GATT）</span><b id="ble-battery">—</b></li>
+            <li><span>标准服务</span><b id="ble-services">—</b></li>
+            <li><span>厂商服务</span><b id="ble-vendor">—</b></li>
+          </ul>
+        </div>
+        <p class="note">
+          蓝牙档下鼠标不经过接收器，而是以 HID-over-GATT 设备直连电脑，
+          因此只有标准 GATT 服务（电量）可读，配置读写仍需切回 2.4G 或有线档。
+        </p>
+        <p class="note" id="ble-note"></p>
+      </div>
+      </div>
+
+      <div class="card">
+        <h3>2.4G 重新配对</h3>
+        <ol class="steps">
+          <li>把接收器插到电脑上，鼠标底部开关拨到 <b>2.4G</b> 档（官方原话：<b>无线模式下，才能进入配对</b>）。</li>
+          <li>让鼠标进入配对状态：<b>同时按住左键 + 中键 + 右键约 3 秒</b>，直至对码指示灯快闪，并靠近接收器。</li>
+          <li>点下面的「开始配对」。接收器会打开约 23 秒的对码窗口，界面上会跟着倒计时。</li>
+        </ol>
+        <div class="row wrap">
+          <button class="btn primary" id="btn-pair">开始配对</button>
+          <span class="note" id="pair-note">对码期间鼠标会暂时失去响应，几秒后自动连回来，属正常现象。</span>
+        </div>
+        <p class="note">
+          按键方式取自官方驱动内置的配对提示原文：「请让鼠标进入配对状态（同时按住左中右键3秒，
+          直至对码指示灯快闪），并靠近接收器」。固件升级则反过来，<b>只有有线模式下才能进行</b>。
+        </p>
+        <p class="note">
+          如果鼠标当前已经能通过 2.4G 正常移动光标，说明它和这个接收器已经是配对好的一对，
+          <b>不需要重新配对</b>——重新配对会先断开现有连接，只在换接收器或丢失绑定时才需要做。
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h3>蓝牙连接（蓝牙 5.1）</h3>
+          <button class="btn ghost" id="btn-bt-settings">打开系统蓝牙设置</button>
+        </div>
+        <ol class="steps">
+          <li>鼠标底部：<b>电源开关拨到 ON</b>，<b>模式切换键拨到「蓝牙」档</b>。</li>
+          <li>
+            <b>长按底部配对键 3–5 秒</b>，直到指示灯<b>快闪</b>。
+            这一步最关键：只把开关拨到蓝牙档，鼠标默认处于「回连上次设备」状态，
+            <b>不会对外广播</b>，电脑因此搜不到它。
+          </li>
+          <li>
+            电脑打开蓝牙，进入<b>添加蓝牙设备 → 蓝牙</b>，在列表里找名称带 <b>P1</b> 的设备。
+            官方说明书写的名称是 <b>Metaphyuni P1</b>。
+          </li>
+          <li>点击连接，指示灯由快闪转为<b>慢闪</b>即配对成功。</li>
+        </ol>
+        <p class="note">
+          鼠标最多记忆 3 台设备；在已配对过的设备之间切换，<b>短按</b>配对键即可，不必重新配对。
+        </p>
+        <p class="note">
+          提示：那份说明书末尾自注「部分内容可能由 AI 生成」，广播名称请以电脑实际搜到的为准 ——
+          认准带 <b>P1</b> 或 <b>Metaphyuni</b> 的那一项。蓝牙 5.1 与 125 Hz 回报率这两项另有产品页参数表印证。
+        </p>
+      </div>
+
+    </section>
+
+    <!-- firmware -->
+    <section class="page" id="page-firmware">
+      <div class="card">
+        <h3>当前固件</h3>
+        <ul class="kv">
+          <li><span>鼠标固件</span><b id="fw-mouse">—</b></li>
+          <li><span>接收器固件</span><b id="fw-dongle">—</b></li>
+          <li><span>鼠标主控（MCU）</span><b id="fw-mcu-mouse">—</b></li>
+          <li><span>接收器主控（MCU）</span><b id="fw-mcu-dongle">—</b></li>
+          <li><span>CID / MID</span><b id="fw-ids">—</b></li>
+        </ul>
+        <p class="note">
+          鼠标固件通过协议命令 0x12 读取；接收器固件来自 USB 描述符的 bcdDevice ——
+          厂商协议里没有让接收器报告自身版本的命令。CID/MID 由命令 0x01 读出。
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h3>固件包校验</h3>
+          <div class="row">
+            <button class="btn ghost" id="btn-fw-pick">选择固件包（.bin）</button>
+            <input type="file" id="fw-file" accept=".bin" hidden />
+          </div>
+        </div>
+        <p class="note">
+          官方驱动的固件来自程序目录下的 <code>bin\*.bin</code>，不是从网上下载的。
+          把拿到的固件包选进来，这里会解析它的文件头并核对它是不是给本机这块芯片的 ——
+          芯片刷错，鼠标就不再是鼠标了。
+        </p>
+        <div id="fw-result" class="fw-result hidden"></div>
+        <div id="fw-actions" class="hidden">
+          <div class="row">
+            <button class="btn ghost" id="btn-fw-probe">探测 bootloader 设备</button>
+            <button class="btn danger" id="btn-fw-flash">开始刷写</button>
+          </div>
+          <div class="bar"><div id="fw-bar" style="width:0%"></div></div>
+          <p class="note" id="fw-status">先探测：设备必须已经处于 bootloader 模式（升级命令会让它自行重启进入）。</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>刷写是怎么工作的</h3>
+        <p class="note">
+          厂商的升级引擎（<code>HIDUsb.dll</code>，32 位）已经随本应用内置，刷写时由一个
+          32 位辅助进程驱动它：它会从固件头里读出 bootloader 的 HID 路径与三条命令，
+          让设备自行重启进 boot，再整包写入并校验 —— 与官方驱动走的是同一条链路。
+        </p>
+        <p class="note">
+          <b>刷写前必须确认：</b>鼠标切到<b>有线模式</b>并插好数据线（官方要求升级只在有线下进行），
+          电量充足，过程中不要拔线、不要关机。刷写失败通常可以重试；
+          但写错不匹配的固件包会让设备无法启动 —— 所以芯片与 CID/MID 校验不通过的包，这里根本不会让你点刷写。
+        </p>
+        <p class="note">
+          官方没有开放固件下载（MetaHub 的 <code>&lt;upgrade url=""&gt;</code> 为空），
+          固件包 <code>.bin</code> 需要从官方渠道单独获取。拿到后先用上面的校验核对。
+        </p>
+      </div>
+    </section>
+
+    <!-- diagnostics -->
+    <section class="page" id="page-diagnostics">
+      <div class="card">
+        <div class="card-head">
+          <h3>配置块（192 字节）</h3>
+          <div class="row">
+            <button class="btn ghost" id="btn-dump">读取</button>
+            <button class="btn ghost" id="btn-copy">复制</button>
+          </div>
+        </div>
+        <pre id="raw-block" class="raw">尚未读取</pre>
+      </div>
+      <div class="card">
+        <h3>运行日志</h3>
+        <pre id="log" class="raw log"></pre>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+<script src="app.js"></script>
+</body>
+</html>

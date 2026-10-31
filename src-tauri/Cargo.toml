@@ -1,0 +1,64 @@
+[package]
+name = "p1studio"
+version = "1.0.0"
+description = "Native control panel for the Metaphyuni P1 Ultra 4K"
+edition = "2021"
+rust-version = "1.77"
+
+[lib]
+name = "p1studio_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# Default features minus the Linux-only plumbing and the menu plumbing this app
+# never uses: "wry" is the webview, "compression" is what brotli-packs the
+# embedded frontend (a few hundred kB of HTML/JS/CSS) into the binary.
+tauri = { version = "2", default-features = false, features = ["wry", "compression"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+hidapi = "2"
+# Direct dependency so diagnostics can report the embedded loader path.
+# The [patch] below redirects this to vendor/webview2-com-sys.
+webview2-com-sys = "0.39"
+
+# Bluetooth mode: the mouse becomes a HID-over-GATT device, and the standard
+# battery service is readable there (see src/ble.rs).
+[dependencies.windows]
+version = "0.62"
+features = [
+    "Devices_Bluetooth",
+    "Devices_Bluetooth_GenericAttributeProfile",
+    "Devices_Enumeration",
+    "Storage_Streams",
+    # Only for the pre-flight check: if the WebView2 runtime is missing the
+    # window cannot be created at all, and the failure looks like "double
+    # clicking does nothing". A plain message box is the only way left to say
+    # why, because the very thing that would render a nicer message is absent.
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_UI_Shell",
+]
+
+[dependencies.windows-future]
+version = "0.3"
+
+# WinRT async is IntoFuture-based; the BLE scan is a short synchronous call.
+[dependencies.futures]
+version = "0.3"
+default-features = false
+features = ["executor", "std"]
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+# Carries WebView2Loader.dll inside the binary instead of shipping it next to
+# the .exe. Upstream only links the loader statically on the MSVC toolchain;
+# this fork loads the embedded copy on demand, which works on GNU too.
+[patch.crates-io]
+webview2-com-sys = { path = "../vendor/webview2-com-sys" }
